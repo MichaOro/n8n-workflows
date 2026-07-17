@@ -1,0 +1,10 @@
+# n8n / OpenCode artifacts
+node_modules/
+.env
+.env.*
+*.log
+.DS_Store
+n8n-config/
+credentials/
+*.sqlite
+*.db
