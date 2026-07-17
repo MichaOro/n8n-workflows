@@ -7,7 +7,10 @@
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -17,7 +20,10 @@
       "name": "Git Pull + List Files",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [500, 300],
+      "position": [
+        500,
+        300
+      ],
       "executeOnce": true
     },
     {
@@ -28,34 +34,61 @@
       "name": "Parse Workflow JSONs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [750, 300]
+      "position": [
+        750,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const TOKEN = $env.N8N_API_TOKEN;\nconst BASE = 'http://127.0.0.1:5678/api/v1';\nconst existing = await fetch(`${BASE}/workflows`, { headers: { 'X-N8N-API-KEY': TOKEN } }).then(r => r.json());\nconst existingByName = {};\nfor (const w of (existing.data || [])) existingByName[w.name] = w;\n\nconst results = [];\nfor (const item of $input.all()) {\n  const wf = item.json.workflow;\n  if (!wf) { results.push({ json: { name: item.json.relativePath, status: 'skipped', reason: item.json.error || 'no workflow object' } }); continue; }\n  const payload = { name: wf.name, nodes: wf.nodes, connections: wf.connections, settings: wf.settings, active: false };\n  const existingWf = existingByName[wf.name];\n  let res;\n  if (existingWf) {\n    res = await fetch(`${BASE}/workflows/${existingWf.id}`, {\n      method: 'PUT',\n      headers: { 'X-N8N-API-KEY': TOKEN, 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n  } else {\n    res = await fetch(`${BASE}/workflows`, {\n      method: 'POST',\n      headers: { 'X-N8N-API-KEY': TOKEN, 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n  }\n  const ok = res.ok;\n  results.push({ json: { name: wf.name, status: ok ? (existingWf ? 'updated' : 'created') : 'failed', http: res.status } });\n}\nreturn results;"
+        "jsCode": "const TOKEN = $env.N8N_API_TOKEN;\nconst BASE = 'http://127.0.0.1:5678/api/v1';\nconst existing = await fetch(`${BASE}/workflows`, { headers: { 'X-N8N-API-KEY': TOKEN } }).then(r => r.json());\nconst existingByName = {};\nfor (const w of (existing.data || [])) existingByName[w.name] = w;\n\nconst results = [];\nfor (const item of $input.all()) {\n  const wf = item.json.workflow;\n  if (!wf) { results.push({ json: { name: item.json.relativePath, status: 'skipped', reason: item.json.error || 'no workflow object' } }); continue; }\n  const payload = { name: wf.name, nodes: wf.nodes, connections: wf.connections, settings: wf.settings };\n  const existingWf = existingByName[wf.name];\n  let res;\n  if (existingWf) {\n    res = await fetch(`${BASE}/workflows/${existingWf.id}`, {\n      method: 'PUT',\n      headers: { 'X-N8N-API-KEY': TOKEN, 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n  } else {\n    res = await fetch(`${BASE}/workflows`, {\n      method: 'POST',\n      headers: { 'X-N8N-API-KEY': TOKEN, 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload)\n    });\n  }\n  const ok = res.ok;\n  results.push({ json: { name: wf.name, status: ok ? (existingWf ? 'updated' : 'created') : 'failed', http: res.status } });\n}\nreturn results;"
       },
       "id": "s1g1-0004-4a00-8000-000000000004",
       "name": "Import/Update Workflows via API",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1000, 300]
+      "position": [
+        1000,
+        300
+      ]
     }
   ],
   "connections": {
     "Manual Trigger": {
-      "main": [[{ "node": "Git Pull + List Files", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Git Pull + List Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Git Pull + List Files": {
-      "main": [[{ "node": "Parse Workflow JSONs", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Parse Workflow JSONs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Parse Workflow JSONs": {
-      "main": [[{ "node": "Import/Update Workflows via API", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Import/Update Workflows via API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
-  "settings": { "executionOrder": "v1" },
-  "versionId": "sync-from-git-v1",
-  "meta": { "templateCredsSetupCompleted": false },
-  "pinData": {},
-  "tags": []
+  "settings": {
+    "executionOrder": "v1"
+  }
 }
