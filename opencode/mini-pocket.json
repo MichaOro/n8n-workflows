@@ -1,0 +1,79 @@
+{
+  "name": "OpenCode Mini Pocket",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-0001-4a00-8000-000000000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "command": "export OPENROUTER_API_KEY=\"$(python3 -c \"import json;print(json.load(open('/home/orologas/.local/share/opencode/auth.json'))['openrouter']['key'])\")\"\ncd /home/orologas/vCardOrologas\n/home/orologas/.local/bin/opencode run 'Respond with exactly: HELLO_FROM_OPENCODE' --model openrouter/nvidia/nemotron-3-ultra-550b-a55b:free --format json"
+      },
+      "id": "a1b2c3d4-0002-4a00-8000-000000000002",
+      "name": "Run OpenCode",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "opencode_output",
+              "value": "={{ $json.stdout }}"
+            },
+            {
+              "name": "exit_code",
+              "value": "={{ $json.exitCode }}"
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0003-4a00-8000-000000000003",
+      "name": "Extract Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Run OpenCode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run OpenCode": {
+      "main": [
+        [
+          {
+            "node": "Extract Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "mini-pocket-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {},
+  "tags": []
+}
