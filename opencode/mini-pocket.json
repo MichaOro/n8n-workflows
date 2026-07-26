@@ -148,7 +148,7 @@
         "filters": {
           "conditions": [
             {
-              "keyValue": "={{ $('Insert Success Row1').item.json.id }}"
+              "keyValue": "=={{ String($execution.id) }}"
             }
           ]
         },
@@ -213,7 +213,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        896,
+        912,
         688
       ]
     },
@@ -230,7 +230,7 @@
         "filters": {
           "conditions": [
             {
-              "keyValue": "={{ $('Insert Success Row1').item.json.id }}"
+              "keyValue": "=={{ String($execution.id) }}"
             }
           ]
         },
@@ -344,7 +344,8 @@
       "id": "8f40bc90-f336-407c-b5f1-1e486cad3f7c",
       "name": "Structured Output Parser",
       "retryOnFail": true,
-      "waitBetweenTries": 1200
+      "waitBetweenTries": 1200,
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -650,6 +651,15 @@
           {
             "node": "Basic LLM Chain",
             "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ],
+      "main": [
+        [
+          {
+            "node": "Insert Error Row",
+            "type": "main",
             "index": 0
           }
         ]
