@@ -1,0 +1,319 @@
+{
+  "name": "OpenCode Review Loop",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "review-loop-0001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "repo_path",
+              "value": "={{$env.REPO_ROOT}}/vCardOrologas"
+            },
+            {
+              "name": "review_prompt",
+              "value": "Review the code changes in this repository. Check for: correctness, security vulnerabilities, performance issues, code style, and maintainability. Output JSON with exactly this schema: {\"quality_score\": 0-100, \"issues\": [\"issue1\", \"issue2\"], \"summary\": \"Brief summary of review\"}. Be thorough but concise."
+            },
+            {
+              "name": "model",
+              "value": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"
+            },
+            {
+              "name": "quality_threshold",
+              "value": "70"
+            },
+            {
+              "name": "max_retries",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "id": "review-loop-0002",
+      "name": "Set Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "retry_count",
+              "value": "0"
+            },
+            {
+              "name": "feedback",
+              "value": ""
+            },
+            {
+              "name": "final_result",
+              "value": "null"
+            }
+          ]
+        }
+      },
+      "id": "review-loop-0003",
+      "name": "Init Loop State",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        },
+        "batchSize": 1
+      },
+      "id": "review-loop-0004",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prompt = $json.review_prompt;\nconst feedback = $json.feedback || '';\n\nlet fullPrompt = prompt;\nif (feedback && feedback.length > 0) {\n  fullPrompt = prompt + '\\n\\nPrevious review found these issues:\\n' + feedback.join('\\n') + '\\n\\nPlease address all issues and re-review.';\n}\n\nreturn [{\n  json: {\n    ...$json,\n    prompt: fullPrompt\n  }\n}];"
+      },
+      "id": "review-loop-0005",
+      "name": "Build Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd {{$json.repo_path}} && export OPENROUTER_API_KEY=\"$OPENROUTER_API_KEY\" && opencode run '{{$json.prompt}}' --model {{$json.model}} --format json",
+        "options": {
+          "shell": "bash"
+        }
+      },
+      "id": "review-loop-0006",
+      "name": "Run OpenCode",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1500, 300],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const stdout = $json.stdout || '';\nconst exitCode = $json.exitCode ?? 1;\n\nlet quality_score = 0;\nlet issues = [];\nlet summary = '';\n\ntry {\n  // Try to parse the last line as JSON (OpenCode JSON output)\n  const lines = stdout.trim().split('\\n');\n  for (let i = lines.length - 1; i >= 0; i--) {\n    const line = lines[i].trim();\n    if (line.startsWith('{') && line.endsWith('}')) {\n      const parsed = JSON.parse(line);\n      if (parsed.quality_score !== undefined) {\n        quality_score = parsed.quality_score;\n        issues = parsed.issues || [];\n        summary = parsed.summary || '';\n        break;\n      }\n    }\n  }\n} catch (e) {\n  // Fallback: try parsing entire stdout\n  try {\n    const parsed = JSON.parse(stdout);\n    quality_score = parsed.quality_score || 0;\n    issues = parsed.issues || [];\n    summary = parsed.summary || '';\n  } catch {\n    // No valid JSON output\n    quality_score = 0;\n    issues = ['OpenCode did not return valid JSON output'];\n    summary = 'Failed to parse OpenCode output';\n  }\n}\n\nreturn [{\n  json: {\n    ...$json,\n    exitCode,\n    quality_score,\n    issues,\n    summary,\n    raw_stdout: stdout\n  }\n}];"
+      },
+      "id": "review-loop-0007",
+      "name": "Parse Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1750, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.quality_score}}",
+              "operation": "largerEqual",
+              "value2": "={{$json.quality_threshold}}"
+            }
+          ]
+        }
+      },
+      "id": "review-loop-0008",
+      "name": "Quality Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const retryCount = ($json.retry_count || 0) + 1;\nconst issues = $json.issues || [];\n\nreturn [{\n  json: {\n    ...$json,\n    retry_count: retryCount,\n    feedback: issues\n  }\n}];"
+      },
+      "id": "review-loop-0009",
+      "name": "Format Feedback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2250, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.retry_count}}",
+              "operation": "smaller",
+              "value2": "={{$json.max_retries}}"
+            }
+          ]
+        }
+      },
+      "id": "review-loop-0010",
+      "name": "Check Max Retries",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2500, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = {\n  status: 'PASS',\n  quality_score: $json.quality_score,\n  threshold: $json.quality_threshold,\n  issues: $json.issues || [],\n  summary: $json.summary,\n  retries: $json.retry_count || 0,\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: result }];"
+      },
+      "id": "review-loop-0011",
+      "name": "Notify Result (PASS)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2250, 450]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = {\n  status: 'FAIL',\n  quality_score: $json.quality_score,\n  threshold: $json.quality_threshold,\n  issues: $json.issues || [],\n  summary: $json.summary,\n  retries: $json.retry_count || 0,\n  max_retries: $json.max_retries,\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: result }];"
+      },
+      "id": "review-loop-0012",
+      "name": "Notify Result (FAIL)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2750, 200]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Config": {
+      "main": [
+        [
+          {
+            "node": "Init Loop State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Loop State": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Build Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prompt": {
+      "main": [
+        [
+          {
+            "node": "Run OpenCode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run OpenCode": {
+      "main": [
+        [
+          {
+            "node": "Parse Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Result": {
+      "main": [
+        [
+          {
+            "node": "Quality Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Gate": {
+      "main": [
+        [
+          {
+            "node": "Notify Result (PASS)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Feedback": {
+      "main": [
+        [
+          {
+            "node": "Check Max Retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Max Retries": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Result (FAIL)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synced"],
+  "versionId": "review-loop-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {}
+}

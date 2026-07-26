@@ -75,5 +75,5 @@
     "templateCredsSetupCompleted": false
   },
   "pinData": {},
-  "tags": []
+  "tags": [{ "id": "1", "name": "synced" }]
 }

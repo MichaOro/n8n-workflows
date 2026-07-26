@@ -1,0 +1,284 @@
+{
+  "name": "OpenCode Task Pack",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "task-pack-0001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        },
+        "batchSize": 1
+      },
+      "id": "task-pack-0002",
+      "name": "Split Tasks",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "task_name",
+              "value": "={{$json.name}}"
+            },
+            {
+              "name": "task_prompt",
+              "value": "={{$json.prompt}}"
+            },
+            {
+              "name": "repo_path",
+              "value": "={{$json.repo_path || $env.REPO_ROOT + '/vCardOrologas'}}"
+            },
+            {
+              "name": "model",
+              "value": "={{$json.model || $parent.json.model || 'openrouter/nvidia/nemotron-3-ultra-550b-a55b:free'}}"
+            },
+            {
+              "name": "continue_on_failure",
+              "value": "={{$parent.json.continue_on_failure || false}}"
+            }
+          ]
+        }
+      },
+      "id": "task-pack-0003",
+      "name": "Set Task Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd {{$json.repo_path}} && export OPENROUTER_API_KEY=\"$OPENROUTER_API_KEY\" && opencode run '{{$json.task_prompt}}' --model {{$json.model}} --format json",
+        "options": {
+          "shell": "bash"
+        }
+      },
+      "id": "task-pack-0004",
+      "name": "Run OpenCode Task",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const stdout = $json.stdout || '';\nconst exitCode = $json.exitCode ?? 1;\nlet result = null;\nlet error = '';\n\ntry {\n  const lines = stdout.trim().split('\\n');\n  for (let i = lines.length - 1; i >= 0; i--) {\n    const line = lines[i].trim();\n    if (line.startsWith('{') && line.endsWith('}')) {\n      result = JSON.parse(line);\n      break;\n    }\n  }\n} catch (e) {\n  error = 'Failed to parse OpenCode output: ' + e.message;\n}\n\nif (!result) {\n  error = error || 'No valid JSON result from OpenCode';\n}\n\nreturn [{\n  json: {\n    ...$json,\n    exitCode,\n    result,\n    error,\n    raw_stdout: stdout\n  }\n}];"
+      },
+      "id": "task-pack-0005",
+      "name": "Parse Task Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.exitCode}}",
+              "operation": "equal",
+              "value2": "0"
+            }
+          ]
+        }
+      },
+      "id": "task-pack-0006",
+      "name": "Check Task Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!$workflow.staticData.results) {\n  $workflow.staticData.results = [];\n}\n\nconst taskResult = {\n  task_name: $json.task_name,\n  success: $json.exitCode === 0,\n  exitCode: $json.exitCode,\n  output: $json.result?.summary || $json.result?.output || $json.raw_stdout || '',\n  error: $json.error || ($json.result?.issues ? $json.result.issues.join(', ') : '')\n};\n\n$workflow.staticData.results.push(taskResult);\n\nreturn [{\n  json: {\n    ...$json,\n    accumulated: true\n  }\n}];"
+      },
+      "id": "task-pack-0007",
+      "name": "Accumulate Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1750, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.continue_on_failure}}",
+              "operation": "equal",
+              "value2": "true"
+            }
+          ]
+        }
+      },
+      "id": "task-pack-0008",
+      "name": "Check Continue on Failure",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2000, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $workflow.staticData.results || [];\nconst successCount = results.filter(r => r.success).length;\nconst failCount = results.length - successCount;\n\nconst summary = {\n  total_tasks: results.length,\n  success_count: successCount,\n  failure_count: failCount,\n  tasks: results,\n  overall_success: failCount === 0\n};\n\nreturn [{ json: summary }];"
+      },
+      "id": "task-pack-0009",
+      "name": "Finalize Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const summary = $json;\n\nconst output = `Task Pack Execution Complete\\n` +\n  `===============================\\n` +\n  `Total Tasks: ${summary.total_tasks}\\n` +\n  `Successful: ${summary.success_count}\\n` +\n  `Failed: ${summary.failure_count}\\n` +\n  `Overall: ${summary.overall_success ? 'SUCCESS' : 'PARTIAL FAILURE'}\\n\\n` +\n  `Task Details:\\n` +\n  summary.tasks.map((t, i) => \n    `${i + 1}. ${t.task_name}: ${t.success ? '✅' : '❌'}\\n` +\n    `   Exit Code: ${t.exitCode}\\n` +\n    `   ${t.output ? 'Output: ' + t.output.substring(0, 200) : ''}\\n` +\n    `   ${t.error ? 'Error: ' + t.error.substring(0, 200) : ''}`\n  ).join('\\n\\n');\n\nreturn [{ json: { summary, notification_text: output } }];"
+      },
+      "id": "task-pack-0010",
+      "name": "Notify Completion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2500, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Split Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Tasks": {
+      "main": [
+        [
+          {
+            "node": "Set Task Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Task Context": {
+      "main": [
+        [
+          {
+            "node": "Run OpenCode Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run OpenCode Task": {
+      "main": [
+        [
+          {
+            "node": "Parse Task Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Task Result": {
+      "main": [
+        [
+          {
+            "node": "Check Task Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Task Status": {
+      "main": [
+        [
+          {
+            "node": "Accumulate Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Accumulate Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accumulate Result": {
+      "main": [
+        [
+          {
+            "node": "Check Continue on Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Continue on Failure": {
+      "main": [
+        [
+          {
+            "node": "Split Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finalize Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Tasks": {
+      "done": [
+        [
+          {
+            "node": "Finalize Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Results": {
+      "main": [
+        [
+          {
+            "node": "Notify Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synced"],
+  "versionId": "task-pack-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {}
+}
