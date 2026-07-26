@@ -25,10 +25,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.2,
       "position": [
-        -32,
-        -96
+        -1264,
+        704
       ],
-      "id": "b9d9c32f-2436-47c4-bd7e-74c22678c86c",
+      "id": "af8960b9-4fad-4c46-9bf6-d954708ca03a",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -48,10 +48,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        192,
-        -96
+        -1040,
+        704
       ],
-      "id": "416d644f-34c2-491f-9809-294af93be76b",
+      "id": "a7f4fcbc-2212-47df-aa6e-1be99ac3bcb4",
       "name": "Edit Fields"
     },
     {
@@ -61,10 +61,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        368,
-        -96
+        -864,
+        704
       ],
-      "id": "dabb43f9-ede2-49a4-b0e6-4fc49119011a",
+      "id": "b32c2786-d3e3-4c85-9830-84d527ebf6a7",
       "name": "Code in JavaScript2"
     },
     {
@@ -72,54 +72,54 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "mode": "id",
-          "value": "5na0HOZmYhDvhM4p",
-          "cachedResultName": "iteration_test_results"
+          "value": "SNcSF0IVx1ixgOW0",
+          "mode": "list",
+          "cachedResultName": "5na0HOZmYhDvhM4p",
+          "cachedResultUrl": "/projects/dEa23WTDtZb5kwKd/datatables/SNcSF0IVx1ixgOW0"
         },
         "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyName": "executionId",
               "keyValue": "={{ $execution.id }}"
             }
           ]
         },
         "returnAll": true
       },
-      "id": "3461b873-3cd1-48c3-8fd0-cc8b537f2a7b",
+      "id": "29573310-612a-4be8-8c33-7f3da7e7f125",
       "name": "Get All Results",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1184,
-        -384
+        -192,
+        544
       ]
     },
     {
       "parameters": {
         "jsCode": "const items = $input.all();\nconst total = items.length;\nconst successCount = items.filter(i => i.json.status === 'success').length;\nconst errorCount = items.filter(i => i.json.status === 'error').length;\n\nreturn [{\n  json: {\n    executionId: items[0]?.json.executionId ?? $execution.id,\n    total,\n    successCount,\n    errorCount,\n    allSucceeded: total === 20 && errorCount === 0 && successCount === 20\n  }\n}];"
       },
-      "id": "97bcbd55-1aef-4f50-8dde-0075d97bd526",
+      "id": "8553cdeb-2247-49ff-b50e-c39c82161a45",
       "name": "Evaluate 20 of 20",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1408,
-        -384
+        32,
+        544
       ]
     },
     {
       "parameters": {
         "jsCode": "return [{ json: { executionId: $execution.id } }];"
       },
-      "id": "7a860231-5fee-424e-917f-bedb290a8904",
+      "id": "5466ce9c-a26e-4311-bf80-3e7544789cb9",
       "name": "Collapse To Single Item",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        976,
-        -384
+        -400,
+        544
       ]
     },
     {
@@ -129,28 +129,36 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        608,
-        -96
+        -624,
+        704
       ],
-      "id": "e4d568bb-4718-46c3-b195-32ba6222de18",
+      "id": "3fdad23b-9b86-4bdb-b514-85f34652e18e",
       "name": "Loop Over Items"
     },
     {
       "parameters": {
+        "operation": "update",
         "dataTableId": {
           "__rl": true,
-          "mode": "id",
-          "value": "5na0HOZmYhDvhM4p",
-          "cachedResultName": "iteration_test_results"
+          "value": "SNcSF0IVx1ixgOW0",
+          "mode": "list",
+          "cachedResultName": "5na0HOZmYhDvhM4p",
+          "cachedResultUrl": "/projects/dEa23WTDtZb5kwKd/datatables/SNcSF0IVx1ixgOW0"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $('Insert Success Row1').item.json.id }}"
+            }
+          ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "executionId": "={{ $execution.id }}",
             "run": "={{ $('Code in JavaScript2').item.json.run }}",
             "status": "success",
-            "output": "={{ JSON.stringify($json) }}",
-            "timestamp": "={{ $now.toISO() }}"
+            "outputContent": "={{ (() => {\n  const text = ($json.output?.report?.content ?? '').trim();\n  return text.length > 250 ? text.slice(0, 247) + '...' : text;\n})() }}",
+            "executionId": "={{ $('Insert Error Row').item.json.executionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -160,7 +168,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "string",
+              "type": "number",
               "readOnly": false,
               "removed": false
             },
@@ -185,22 +193,12 @@
               "removed": false
             },
             {
-              "id": "output",
-              "displayName": "output",
+              "id": "outputContent",
+              "displayName": "outputContent",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "timestamp",
-              "displayName": "timestamp",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
               "readOnly": false,
               "removed": false
             }
@@ -210,31 +208,39 @@
         },
         "options": {}
       },
-      "id": "83ee55ac-7185-4b48-a075-d65302f3eae0",
+      "id": "16306e32-1f71-46c4-96c2-682b5955bce3",
       "name": "Insert Success Row",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1920,
-        -96
+        896,
+        688
       ]
     },
     {
       "parameters": {
+        "operation": "update",
         "dataTableId": {
           "__rl": true,
-          "mode": "id",
-          "value": "5na0HOZmYhDvhM4p",
-          "cachedResultName": "iteration_test_results"
+          "value": "SNcSF0IVx1ixgOW0",
+          "mode": "list",
+          "cachedResultName": "5na0HOZmYhDvhM4p",
+          "cachedResultUrl": "/projects/dEa23WTDtZb5kwKd/datatables/SNcSF0IVx1ixgOW0"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $('Insert Success Row1').item.json.id }}"
+            }
+          ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "executionId": "={{ $execution.id }}",
             "run": "={{ $('Code in JavaScript2').item.json.run }}",
             "status": "error",
-            "output": "={{ JSON.stringify($json) }}",
-            "timestamp": "={{ $now.toISO() }}"
+            "outputContent": "={{ (() => {\n  const text = ($json.text ?? '').trim();\n  return text.length > 250 ? text.slice(0, 247) + '...' : text;\n})() }}",
+            "executionId": "={{ $('Insert Success Row').item.json.id }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -244,7 +250,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "string",
+              "type": "number",
               "readOnly": false,
               "removed": false
             },
@@ -269,22 +275,12 @@
               "removed": false
             },
             {
-              "id": "output",
-              "displayName": "output",
+              "id": "outputContent",
+              "displayName": "outputContent",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "readOnly": false,
-              "removed": false
-            },
-            {
-              "id": "timestamp",
-              "displayName": "timestamp",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
               "readOnly": false,
               "removed": false
             }
@@ -294,13 +290,13 @@
         },
         "options": {}
       },
-      "id": "224692d1-3a97-4f0b-8a05-ef8e8c33644d",
+      "id": "5919c74d-a038-43ce-be50-b53aec7cb389",
       "name": "Insert Error Row",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2176,
-        -64
+        1152,
+        720
       ]
     },
     {
@@ -323,11 +319,13 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        816,
-        -80
+        -208,
+        720
       ],
-      "id": "da247cf3-3875-4601-a1ba-58bb4bf62415",
+      "id": "379b890f-57a4-414b-9979-319e33152f49",
       "name": "Basic LLM Chain5",
+      "retryOnFail": true,
+      "waitBetweenTries": 1200,
       "onError": "continueErrorOutput"
     },
     {
@@ -340,11 +338,13 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1680,
-        144
+        656,
+        944
       ],
-      "id": "eb45bb49-1929-4cd7-9135-f33a05795d15",
-      "name": "Structured Output Parser"
+      "id": "8f40bc90-f336-407c-b5f1-1e486cad3f7c",
+      "name": "Structured Output Parser",
+      "retryOnFail": true,
+      "waitBetweenTries": 1200
     },
     {
       "parameters": {
@@ -355,29 +355,29 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1120,
-        -176
+        32,
+        944
       ],
-      "id": "210de4b1-f85b-46a9-9fcc-0c5e78b1a406",
+      "id": "fc1161b7-6386-4a2b-a6a9-105ff4738e4b",
       "name": "Edit Fields1"
     },
     {
       "parameters": {
         "jsCode": "let review = $json.review ?? \"\";\n\n// Markdown-Codefences entfernen\nreview = review.replace(/^```json\\s*/i, \"\");\nreview = review.replace(/^```\\s*/i, \"\");\nreview = review.replace(/\\s*```$/i, \"\");\n\nreturn [{\n  json: {\n    review\n  }\n}];"
       },
-      "id": "987200c6-18cd-45ba-b5cd-ed58823853e9",
+      "id": "8934a59b-75cc-4e18-a1b8-bc6f92da81f9",
       "name": "Collapse To Single Item1",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1280,
-        -240
+        240,
+        944
       ]
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Extract all information from the following engineering review.\n\n{{ $json.review }}",
+        "text": "=Extract all information from the following engineering review.\n\n{{ $json.text }}",
         "hasOutputParser": true,
         "messages": {
           "messageValues": [
@@ -391,32 +391,34 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        1504,
-        -80
+        464,
+        704
       ],
-      "id": "b1195442-ab65-4a17-9b6c-df4cdbe53d5d",
+      "id": "59fbd809-2720-45d8-9119-d3200728ede2",
       "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "waitBetweenTries": 1200,
       "onError": "continueErrorOutput"
     },
     {
       "parameters": {
         "model": "openai/gpt-oss-20b:free",
         "options": {
-          "temperature": 0
+          "timeout": 1200000
         }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        1504,
-        336
+        464,
+        1104
       ],
-      "id": "168945cd-ddae-4400-b560-3edbca02b3db",
+      "id": "e348ebb6-ac5e-4fc6-97c1-8fa0583781bf",
       "name": "OpenRouter Chat Model",
       "credentials": {
         "openRouterApi": {
-          "id": "6hMDJOZ2W805mG1P",
-          "name": "n8nOpencode"
+          "id": "RDD7iqLMedxhNPVg",
+          "name": "OpenRouter account"
         }
       }
     },
@@ -424,23 +426,108 @@
       "parameters": {
         "model": "openai/gpt-oss-20b:free",
         "options": {
-          "temperature": 0
+          "temperature": 0,
+          "timeout": 1200000
         }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        1680,
-        368
+        656,
+        1168
       ],
-      "id": "997c6c15-742e-4e30-9a03-eb1d301dd800",
+      "id": "e02c2305-a515-46fc-8d45-9539dc574cb5",
       "name": "OpenRouter Chat Model1",
       "credentials": {
         "openRouterApi": {
-          "id": "6hMDJOZ2W805mG1P",
-          "name": "n8nOpencode"
+          "id": "RDD7iqLMedxhNPVg",
+          "name": "OpenRouter account"
         }
       }
+    },
+    {
+      "parameters": {
+        "providerID": "opencode",
+        "modelID": "deepseek-v4-flash-free",
+        "sessionMode": "temporary",
+        "timeoutMs": 1200000
+      },
+      "type": "CUSTOM.jadaChatModel",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        960
+      ],
+      "id": "b68d5657-d62d-48fc-9591-3e70faa9557a",
+      "name": "Jada Chat Model",
+      "credentials": {
+        "jadaOpenCodeApi": {
+          "id": "AmptIvjlVFRxq5qa",
+          "name": "Jada OpenCode account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "SNcSF0IVx1ixgOW0",
+          "mode": "list",
+          "cachedResultName": "5na0HOZmYhDvhM4p",
+          "cachedResultUrl": "/projects/dEa23WTDtZb5kwKd/datatables/SNcSF0IVx1ixgOW0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run": "={{ $('Code in JavaScript2').item.json.run }}",
+            "status": "in Progress"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "run",
+              "displayName": "run",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outputContent",
+              "displayName": "outputContent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "88044fa1-256c-4b3b-995f-efa9d73c0170",
+      "name": "Insert Success Row1",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        720
+      ]
     }
   ],
   "connections": {
@@ -510,7 +597,7 @@
         ],
         [
           {
-            "node": "Edit Fields1",
+            "node": "Insert Success Row1",
             "type": "main",
             "index": 0
           }
@@ -541,7 +628,13 @@
     },
     "Basic LLM Chain5": {
       "main": [
-        [],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Insert Error Row",
@@ -623,13 +716,33 @@
           }
         ]
       ]
+    },
+    "Jada Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain5",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Success Row1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
   "meta": {
-    "aiBuilderAssisted": true,
-    "builderVariant": "mcp",
     "templateCredsSetupCompleted": true,
-    "instanceId": "e6877b65ee1dca2f8554659dd28f5f24337ac389b1263fb7261a72baf2d80cb7"
+    "instanceId": "73dc20adedc83b019bbd76a832bc74727dc0d1bd8582497aee04916caf045fdb"
   }
 }
