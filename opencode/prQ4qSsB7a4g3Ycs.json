@@ -1,0 +1,566 @@
+{
+  "updatedAt": "2026-07-28T09:49:15.620Z",
+  "createdAt": "2026-07-23T07:14:18.269Z",
+  "id": "prQ4qSsB7a4g3Ycs",
+  "name": "GitHub.Gateway",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Repository Owner"
+            },
+            {
+              "name": "Repository Name"
+            },
+            {
+              "name": "Issue Number",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -576,
+        -224
+      ],
+      "id": "c5bcdbd6-5736-4ce9-9eb1-d9729c17f9d9",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $json['Repository Owner'] }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $json['Repository Name'] }}",
+          "mode": "name"
+        },
+        "issueNumber": "={{ $json['Issue Number'] }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -384,
+        -224
+      ],
+      "id": "1a1e4bf8-f6ab-4181-86f6-36ec4beecdae",
+      "name": "Get issue",
+      "webhookId": "f147a3f9-f38e-464b-90ed-532cb801fe55",
+      "credentials": {
+        "githubApi": {
+          "id": "AmrD6r1j4vl4Wjnj",
+          "name": "guthub-classic-token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8276433180",
+        "text": "implementation",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        -96
+      ],
+      "id": "f65b80fc-5492-40b7-9757-de168f2526d5",
+      "name": "Send a text message1",
+      "webhookId": "3ed9b67a-d035-4fde-943e-a945bc02c619",
+      "credentials": {
+        "telegramApi": {
+          "id": "6lW6p4tgAnGfjJ9e",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflowStates = [\n  \"awaiting review\",\n  \"needs refinement\",\n  \"awaiting approval\",\n  \"approved\",\n  \"implementing\",\n  \"completed\",\n];\n\nconst labels = $(\"Get issue\")\n  .first()\n  .json\n  .labels\n  .map(label => label.name);\n\nconst state = labels.find(label => workflowStates.includes(label));\n\nreturn [{\n  json: {\n    ...$json,\n    labels,\n    state,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        -224
+      ],
+      "id": "e68a3539-fb7e-4d9e-b1dd-281d76ae4fe4",
+      "name": "get label state"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "qdWrRpwbNRgqK9Lm",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/qdWrRpwbNRgqK9Lm",
+          "cachedResultName": "GitHub.CreateReview"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Issue Number": "={{ $('When Executed by Another Workflow').item.json['Issue Number'] }}",
+            "Repository Owner": "={{ $('When Executed by Another Workflow').item.json['Repository Owner'] }}",
+            "Repository Name": "={{ $('When Executed by Another Workflow').item.json['Repository Name'] }}"
+          },
+          "matchingColumns": [
+            "githubEvent"
+          ],
+          "schema": [
+            {
+              "id": "Repository Owner",
+              "displayName": "Repository Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Repository Name",
+              "displayName": "Repository Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Issue Number",
+              "displayName": "Issue Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        -496
+      ],
+      "id": "c6a6ebdf-b82b-41de-8093-11ecc1a523aa",
+      "name": "Call 'GitHub.CreateReview'1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HBfvezw1y956IKDm",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HBfvezw1y956IKDm",
+          "cachedResultName": "GitHub.ApplyReview"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Issue Number": "={{ $('When Executed by Another Workflow').item.json['Issue Number'] }}",
+            "Repository Owner": "={{ $('When Executed by Another Workflow').item.json['Repository Owner'] }}",
+            "Repository Name": "={{ $('When Executed by Another Workflow').item.json['Repository Name'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Repository Owner",
+              "displayName": "Repository Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Repository Name",
+              "displayName": "Repository Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Issue Number",
+              "displayName": "Issue Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        -304
+      ],
+      "id": "2495c149-4bd2-4084-acc5-c483b6853944",
+      "name": "Call 'GitHub.ApplyReview'"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.labels.includes(\"refinement\") }}",
+                    "rightValue": "awaiting approval",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "0c87b37f-0183-48f7-8c4a-1cc0e5ea61dd"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "refinement"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "045cf75c-532c-46d6-9710-16bcffd10542",
+                    "leftValue": "={{ $json.labels.includes(\"implementation\") }}",
+                    "rightValue": "requirement",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "implementation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        -224
+      ],
+      "id": "dde29cfe-acf5-42d0-9cb5-b94f552496ac",
+      "name": "state switcch"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "045cf75c-532c-46d6-9710-16bcffd10542",
+                    "leftValue": "={{ $json.labels.includes(\"create review\") }}",
+                    "rightValue": "requirement",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create review"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.labels.includes(\"apply review\") }}",
+                    "rightValue": "awaiting approval",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "0c87b37f-0183-48f7-8c4a-1cc0e5ea61dd"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "apply reviewl"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        -400
+      ],
+      "id": "ecba901f-4f39-4200-bd90-4c240de967c0",
+      "name": "refinement:mode"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.labels.includes(\"apply reviewl\") }}",
+                    "rightValue": "awaiting approval",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "0c87b37f-0183-48f7-8c4a-1cc0e5ea61dd"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "apply reviewl"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "045cf75c-532c-46d6-9710-16bcffd10542",
+                    "leftValue": "={{ $json.labels.includes(\"create review\") }}",
+                    "rightValue": "requirement",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create review"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        -128
+      ],
+      "id": "1da70f4c-c370-4c58-a986-ada70f91b0bc",
+      "name": "mplementation:mode"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get issue": {
+      "main": [
+        [
+          {
+            "node": "get label state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get label state": {
+      "main": [
+        [
+          {
+            "node": "state switcch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "state switcch": {
+      "main": [
+        [
+          {
+            "node": "refinement:mode",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "mplementation:mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "refinement:mode": {
+      "main": [
+        [
+          {
+            "node": "Call 'GitHub.CreateReview'1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'GitHub.ApplyReview'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mplementation:mode": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "79e41c76-21e6-4b29-ab75-424ec510edf4",
+  "activeVersionId": "79e41c76-21e6-4b29-ab75-424ec510edf4",
+  "versionCounter": 221,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-23T07:14:18.269Z",
+      "createdAt": "2026-07-23T07:14:18.269Z",
+      "role": "workflow:owner",
+      "workflowId": "prQ4qSsB7a4g3Ycs",
+      "projectId": "A0Yicp6IvSFdAZpS",
+      "project": {
+        "updatedAt": "2026-07-17T21:53:52.270Z",
+        "createdAt": "2026-07-17T21:53:00.695Z",
+        "id": "A0Yicp6IvSFdAZpS",
+        "name": "Micha Oro <micha.oro@me.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "fdcdf568-a0bd-4568-a032-8cb991d82094"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 79e41c76",
+    "description": ""
+  }
+}

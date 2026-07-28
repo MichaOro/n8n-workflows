@@ -1,0 +1,98 @@
+{
+  "updatedAt": "2026-07-24T11:38:03.272Z",
+  "createdAt": "2026-07-22T21:21:21.864Z",
+  "id": "K66c3w5hhJ37fAqM",
+  "name": "error",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c0deed3b-f071-4b52-bd2c-6e2bc547108c",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "8276433180",
+        "text": "={{ $json.execution.error.message }}\n{{ $json.execution.error.stack }}\n{{ $json.execution.lastNodeExecuted }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "c9eb5ade-f79b-4522-82de-562b927afa4a",
+      "name": "Send a text message",
+      "webhookId": "814ed94f-8029-4ec6-91e2-640faae846f9",
+      "credentials": {
+        "telegramApi": {
+          "id": "6lW6p4tgAnGfjJ9e",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "6dedead5-6646-4f08-bac5-d1323d7a06a8",
+  "activeVersionId": "6dedead5-6646-4f08-bac5-d1323d7a06a8",
+  "versionCounter": 13,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-22T21:21:21.866Z",
+      "createdAt": "2026-07-22T21:21:21.866Z",
+      "role": "workflow:owner",
+      "workflowId": "K66c3w5hhJ37fAqM",
+      "projectId": "A0Yicp6IvSFdAZpS",
+      "project": {
+        "updatedAt": "2026-07-17T21:53:52.270Z",
+        "createdAt": "2026-07-17T21:53:00.695Z",
+        "id": "A0Yicp6IvSFdAZpS",
+        "name": "Micha Oro <micha.oro@me.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "fdcdf568-a0bd-4568-a032-8cb991d82094"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 6dedead5",
+    "description": ""
+  }
+}

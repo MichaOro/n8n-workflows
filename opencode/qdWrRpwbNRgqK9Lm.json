@@ -1,0 +1,928 @@
+{
+  "updatedAt": "2026-07-28T12:30:52.270Z",
+  "createdAt": "2026-07-19T09:08:41.608Z",
+  "id": "qdWrRpwbNRgqK9Lm",
+  "name": "GitHub.CreateReview",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{$('Get issue').item.json.url}}/comments",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -240,
+        -48
+      ],
+      "id": "c3586501-d74e-4ce7-b565-5f4de3de904a",
+      "name": "get comments",
+      "alwaysOutputData": true,
+      "credentials": {
+        "githubApi": {
+          "id": "FrfLZkxyTwKpU6UT",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Always Output Data => {}\nif (Object.keys(data).length === 0) {\n  return [{\n    json: {\n      reviewVersion: 1\n    }\n  }];\n}\n\n// normales Array\nreturn [{\n  json: {\n    reviewVersion: $input.all().length + 1\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        -48
+      ],
+      "id": "123b5986-c4f0-4388-93e3-8d6646b13557",
+      "name": "increase review version"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1104,
+        80
+      ],
+      "id": "d37823f5-d820-4bfa-9140-825f00119e66",
+      "name": "prepare new comment"
+    },
+    {
+      "parameters": {
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow m').item.json['Repository Owner'] }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow m').item.json['Repository Name'] }}",
+          "mode": "name"
+        },
+        "issueNumber": "={{ $('When Executed by Another Workflow m').item.json['Issue Number'] }}",
+        "body": "=Review version: {{ $('increase review version').item.json.reviewVersion }}\n\n=Review version: {{ $('increase review version').item.json.reviewVersion }}\n\n{{ $('Formatter').item.json.output.report.content }}\n"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2144,
+        80
+      ],
+      "id": "c70eb2a6-e438-4df5-8c64-51ffddc101e5",
+      "name": "Create comment on an issue",
+      "webhookId": "f147a3f9-f38e-464b-90ed-532cb801fe55",
+      "credentials": {
+        "githubApi": {
+          "id": "FrfLZkxyTwKpU6UT",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "6J0l7Kx3ns5ys7YB",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6J0l7Kx3ns5ys7YB",
+          "cachedResultName": "GitHub.SetProjectFiel"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "issue": "={{ $json['Issue Number'] }}",
+            "owner": "={{ $json['Repository Owner'] }}",
+            "repo": "={{ $json['Repository Name'] }}",
+            "field": "Status",
+            "value": "In review"
+          },
+          "matchingColumns": [
+            ""
+          ],
+          "schema": [
+            {
+              "id": "owner",
+              "displayName": "owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "repo",
+              "displayName": "repo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "issue",
+              "displayName": "issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "field",
+              "displayName": "field",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -640,
+        48
+      ],
+      "id": "a8533cbb-7538-4bbe-84ab-cecf30381703",
+      "name": "set Status 'In review'"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow m').item.json['Repository Owner'] }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow m').item.json['Repository Name'] }}",
+          "mode": "name"
+        },
+        "issueNumber": "={{ $('When Executed by Another Workflow m').item.json['Issue Number'] }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        48
+      ],
+      "id": "8d5d735d-5864-405d-8e14-3bf07a5a7974",
+      "name": "Get issue",
+      "webhookId": "f147a3f9-f38e-464b-90ed-532cb801fe55",
+      "credentials": {
+        "githubApi": {
+          "id": "AmrD6r1j4vl4Wjnj",
+          "name": "guthub-classic-token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Repository Owner"
+            },
+            {
+              "name": "Repository Name"
+            },
+            {
+              "name": "Issue Number",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        48
+      ],
+      "id": "8596bf35-115b-4e40-b0d0-a2ac4c63366c",
+      "name": "When Executed by Another Workflow m"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d9275372-239c-4d16-aa4d-a37f40530964",
+              "leftValue": "={{$json.output.summary.score}}",
+              "rightValue": 95,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        80
+      ],
+      "id": "c8764c29-f4be-4ab0-a8cc-e032d8972d87",
+      "name": "if score >= 95"
+    },
+    {
+      "parameters": {
+        "jsCode": "const labels = [...$json.labels];\n\n// entfernen\nconst filtered = labels.filter(label =>\n    ![\"apply review\",\"create review\",\"refinement\"].includes(label)\n);\n\n// hinzufügen\nfiltered.push(\"implementation\");\n\nreturn [{\n    json: {\n        labels: filtered\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        0
+      ],
+      "id": "8f4a171e-2d6a-4fc2-83cf-4bd1a679cab2",
+      "name": "set 'Implementation'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "6J0l7Kx3ns5ys7YB",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6J0l7Kx3ns5ys7YB",
+          "cachedResultName": "GitHub.SetProjectFiel"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "issue": "={{ $('When Executed by Another Workflow m').item.json['Issue Number'] }}",
+            "owner": "={{ $('When Executed by Another Workflow m').item.json['Repository Owner'] }}",
+            "repo": "={{ $('When Executed by Another Workflow m').item.json['Repository Name'] }}",
+            "field": "Status",
+            "value": "Ready"
+          },
+          "matchingColumns": [
+            ""
+          ],
+          "schema": [
+            {
+              "id": "owner",
+              "displayName": "owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "repo",
+              "displayName": "repo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "issue",
+              "displayName": "issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "field",
+              "displayName": "field",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1952,
+        80
+      ],
+      "id": "9b43edd6-a479-4014-a172-e167e5170e59",
+      "name": "set Status 'In review'1"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{$('Get issue').item.json.url}}/labels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  labels: $json.labels\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1760,
+        80
+      ],
+      "id": "9767686b-bc19-40f7-8402-a93be1b84061",
+      "name": "update labels",
+      "alwaysOutputData": true,
+      "credentials": {
+        "githubApi": {
+          "id": "FrfLZkxyTwKpU6UT",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const labels = $(\"Get issue\")\n  .first()\n  .json\n  .labels\n  .map(label => label.name);\n\n// \"create review\" und \"automation:running\" entfernen\nconst filtered = labels.filter(label =>\n  ![\"create review\", \"automation:running\"].includes(label)\n);\n\n// \"apply review\" hinzufügen, falls noch nicht vorhanden\nif (!filtered.includes(\"apply review\")) {\n  filtered.push(\"apply review\");\n}\n\nreturn [{\n  json: {\n    labels: filtered\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        160
+      ],
+      "id": "43ea5b00-cb77-4933-89c8-1adec49d6641",
+      "name": "set 'apply Review'"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      workpackage: $json.body\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        112
+      ],
+      "id": "40e231c9-90a7-49fa-a19a-9508150aaf06",
+      "name": "get issue"
+    },
+    {
+      "parameters": {
+        "providerID": "opencode",
+        "modelID": "nemotron-3-ultra-free",
+        "agent": "OpenRepoManager",
+        "sessionMode": "temporary"
+      },
+      "type": "n8n-nodes-jada.jadaChatModel",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        352
+      ],
+      "id": "ddd6034f-29bd-4da4-8f18-269a73ab8549",
+      "name": "Jada Chat Model",
+      "credentials": {
+        "jadaOpenCodeApi": {
+          "id": "UwrYnatUHOMTExEH",
+          "name": "Jada OpenCode account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"metadata\": {\n    \"skill\": \"work-package-review\",\n    \"version\": \"string\",\n    \"schemaVersion\": \"string\",\n    \"reviewId\": \"string\",\n    \"reviewType\": \"string\",\n    \"reviewDate\": \"ISO8601\",\n    \"repository\": \"string\",\n    \"workPackage\": \"string\"\n  },\n  \"summary\": {\n    \"decision\": \"string\",\n    \"score\": 0,\n    \"scoreCeiling\": 0,\n    \"confidence\": \"string\",\n    \"readiness\": \"string\",\n    \"implementationReady\": true,\n    \"critical\": 0,\n    \"high\": 0,\n    \"medium\": 0,\n    \"low\": 0,\n    \"totalFindings\": 0,\n    \"blockingFindings\": 0\n  },\n  \"findings\": [\n    {\n      \"id\": \"string\",\n      \"severity\": \"string\",\n      \"status\": \"string\",\n      \"title\": \"string\",\n      \"dimension\": \"string\",\n      \"description\": \"string\",\n      \"evidence\": \"string\",\n      \"impact\": \"string\",\n      \"recommendation\": \"string\"\n    }\n  ],\n  \"report\": {\n    \"format\": \"markdown\",\n    \"version\": \"string\",\n    \"content\": \"# Executive Summary\\n\\n...\"\n  }\n}",
+        "autoFix": true,
+        "customizeRetryPrompt": true,
+        "prompt": "The previous response did not match the required output schema.\n\nValidation error:\n{error}\n\nPlease repair the response.\n\nRequirements:\n\n- Return exactly one valid RFC8259-compliant JSON object.\n- Match the required schema exactly.\n- Do not change the schema.\n- Do not rename fields.\n- Do not remove required fields.\n- Do not add explanations.\n- Do not add Markdown.\n- Do not use Markdown code fences.\n- Return only the corrected JSON object."
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        288
+      ],
+      "id": "7d2bf61e-26ac-4db3-9ef1-7a337e29a3ce",
+      "name": "Structured Output Parser1",
+      "retryOnFail": true,
+      "waitBetweenTries": 1200,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "providerID": "opencode",
+        "modelID": "mimo-v2.5-free",
+        "sessionMode": "temporary"
+      },
+      "type": "n8n-nodes-jada.jadaChatModel",
+      "typeVersion": 1,
+      "position": [
+        624,
+        576
+      ],
+      "id": "167242bd-24ba-454f-9664-5cfe130789b4",
+      "name": "Jada Chat Model2",
+      "credentials": {
+        "jadaOpenCodeApi": {
+          "id": "UwrYnatUHOMTExEH",
+          "name": "Jada OpenCode account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Follow the complete review workflow defined by the work-package-review skill.\n\nProduce exactly one engineering review that conforms to the review-output-contract.md specification.",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "={{ $json.workpackage }}"
+            },
+            {
+              "message": "You are a Senior Engineering Review Agent.  Your sole responsibility is to execute the **work-package-review** skill.  The skill is the authoritative source for: - review workflow - engineering methodology - evaluation criteria - decision process - output contract - report structure  Execute the skill exactly as defined.  Do not: - redefine the methodology - replace any part of the workflow - simplify or skip review phases - invent additional review criteria - modify the output contract - add explanations, summaries, introductions, conclusions, or completion messages  Base every conclusion on repository evidence.  Do not speculate.  Do not invent missing information.  If required information is unavailable: - explicitly state the assumption - reduce confidence accordingly - never fabricate evidence  The output produced by the skill is the final response.  Return the skill output exactly as produced.  Do not validate it.  Do not explain it.  Do not wrap it in Markdown.  Do not prepend or append any text.  If the skill specifies JSON output, return exactly one RFC8259-compliant JSON object."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -32,
+        112
+      ],
+      "id": "328ee4eb-3410-4a02-b539-24c267a4f909",
+      "name": "Refview Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 1200,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract all information from the following engineering review.\n\n{{ $json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a deterministic information extraction engine.\n\nExtract information from the provided engineering review.\n\nThe connected Structured Output Parser defines the required output schema.\n\nRules:\n\n- Read the complete review.\n- Preserve every value exactly.\n- Do not invent information.\n- Do not summarize.\n- Do not omit information that exists.\n- Preserve the complete markdown report inside report.content.\n- Return only the information required by the connected Structured Output Parser."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        560,
+        96
+      ],
+      "id": "da600f8a-38c7-4c1c-aced-29a0f63b8976",
+      "name": "Formatter",
+      "retryOnFail": true,
+      "waitBetweenTries": 1200,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "8276433180",
+        "text": "Refview Agent - error - loop",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        128
+      ],
+      "id": "da631a07-f823-4d3a-b2a1-27859bd484e5",
+      "name": "Send a text message",
+      "webhookId": "6e58fad6-8d4f-45a8-a131-b3bf77db8765",
+      "credentials": {
+        "telegramApi": {
+          "id": "6lW6p4tgAnGfjJ9e",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8276433180",
+        "text": "Formatter - error - loop",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        112
+      ],
+      "id": "c420ee83-dfe6-427e-9ec1-c822d5f5f791",
+      "name": "Send a text message1",
+      "webhookId": "6e58fad6-8d4f-45a8-a131-b3bf77db8765",
+      "credentials": {
+        "telegramApi": {
+          "id": "6lW6p4tgAnGfjJ9e",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8276433180",
+        "text": "Structured Output Parser - error - loop",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        272
+      ],
+      "id": "aeec9a6f-f8c5-430c-8d8a-0156108155b1",
+      "name": "Send a text message2",
+      "webhookId": "6e58fad6-8d4f-45a8-a131-b3bf77db8765",
+      "credentials": {
+        "telegramApi": {
+          "id": "6lW6p4tgAnGfjJ9e",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "get comments": {
+      "main": [
+        [
+          {
+            "node": "increase review version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "increase review version": {
+      "main": [
+        [
+          {
+            "node": "prepare new comment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare new comment": {
+      "main": [
+        [
+          {
+            "node": "if score >= 95",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create comment on an issue": {
+      "main": [
+        []
+      ]
+    },
+    "set Status 'In review'": {
+      "main": [
+        [
+          {
+            "node": "Get issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get issue": {
+      "main": [
+        [
+          {
+            "node": "get issue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "get comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow m": {
+      "main": [
+        [
+          {
+            "node": "set Status 'In review'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if score >= 95": {
+      "main": [
+        [
+          {
+            "node": "set 'Implementation'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "set 'apply Review'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set 'Implementation'": {
+      "main": [
+        [
+          {
+            "node": "update labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set Status 'In review'1": {
+      "main": [
+        [
+          {
+            "node": "Create comment on an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update labels": {
+      "main": [
+        [
+          {
+            "node": "set Status 'In review'1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set 'apply Review'": {
+      "main": [
+        [
+          {
+            "node": "update labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get issue": {
+      "main": [
+        [
+          {
+            "node": "Refview Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jada Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Refview Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Formatter",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ],
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jada Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Formatter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refview Agent": {
+      "main": [
+        [
+          {
+            "node": "Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatter": {
+      "main": [
+        [
+          {
+            "node": "prepare new comment",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Refview Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        [
+          {
+            "node": "Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "01b0f83b-c5bb-475b-8346-80288342cffa",
+  "activeVersionId": "2d51357a-5cbe-4d16-977b-4936d0728a4b",
+  "versionCounter": 940,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-19T09:08:41.610Z",
+      "createdAt": "2026-07-19T09:08:41.610Z",
+      "role": "workflow:owner",
+      "workflowId": "qdWrRpwbNRgqK9Lm",
+      "projectId": "A0Yicp6IvSFdAZpS",
+      "project": {
+        "updatedAt": "2026-07-17T21:53:52.270Z",
+        "createdAt": "2026-07-17T21:53:00.695Z",
+        "id": "A0Yicp6IvSFdAZpS",
+        "name": "Micha Oro <micha.oro@me.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "fdcdf568-a0bd-4568-a032-8cb991d82094"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

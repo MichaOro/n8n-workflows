@@ -1,0 +1,724 @@
+{
+  "updatedAt": "2026-07-28T10:02:22.281Z",
+  "createdAt": "2026-07-21T10:50:42.772Z",
+  "id": "HBfvezw1y956IKDm",
+  "name": "GitHub.ApplyReview",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { workPackage: $json.body } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -160
+      ],
+      "id": "e731992f-c62d-4097-a4a2-5263a6ce482a",
+      "name": "get issue body"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length === 0) {\n  throw new Error('Keine Kommentare vorhanden.');\n}\n\nconst validItems = items.filter(item => {\n  return (\n    item.json &&\n    typeof item.json.created_at === 'string' &&\n    typeof item.json.body === 'string'\n  );\n});\n\nif (validItems.length === 0) {\n  throw new Error('Kein Kommentar mit created_at und body gefunden.');\n}\n\nconst latestItem = validItems.reduce((latest, current) => {\n  const latestTimestamp = Date.parse(latest.json.created_at);\n  const currentTimestamp = Date.parse(current.json.created_at);\n\n  if (!Number.isFinite(currentTimestamp)) {\n    return latest;\n  }\n\n  if (!Number.isFinite(latestTimestamp)) {\n    return current;\n  }\n\n  return currentTimestamp > latestTimestamp\n    ? current\n    : latest;\n});\n\n// Nur der Body des aktuellsten Kommentars wird weitergegeben\nreturn [\n  {\n    json: {\n      review: latestItem.json.body,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        160
+      ],
+      "id": "691b1360-7a3e-4520-aa02-f0d5d7e187f7",
+      "name": "get comment body"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1360,
+        -16
+      ],
+      "id": "ece32e60-8862-46a3-9934-c655178dc9a8",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.promt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a Senior IT Solution Architect and Technical Writer.\n\nYour primary objective is to improve the quality of an existing Work Package.\n\nA successful revision produces a Work Package that is more complete, more precise and more implementation-ready than the previous version.\n\nEvery revision should move the Work Package closer to a review score of at least 95/100.\n\n---\n\n## Revision Principles\n\nAlways prioritize:\n\n1. Correctness\n2. Repository consistency\n3. Implementation readiness\n4. Technical precision\n5. Maintainability\n6. Clarity\n7. Reuse of existing implementations\n\nPrefer extending existing implementations over introducing new ones.\n\nPreserve valid information whenever possible.\n\nDo not introduce unnecessary complexity.\n\nDo not invent requirements unrelated to the original feature request.\n\nIf a review recommendation conflicts with the repository, prefer the repository.\n\nIf multiple improvements are possible, choose the solution that best aligns with the existing architecture.\n\n---\n\n## Revision Rules\n\nAlways:\n\n- resolve every valid review finding\n- preserve correct information\n- replace incorrect information\n- complete missing implementation details\n- remove ambiguities\n- improve consistency across the document\n- improve implementation guidance\n- improve acceptance criteria where necessary\n- improve testing strategy where necessary\n- improve risks where necessary\n- improve architectural accuracy\n- maintain the existing document structure whenever practical\n\nNever:\n\n- remove valid implementation guidance\n- introduce unrelated requirements\n- output a changelog\n- explain what was changed\n- output commentary\n- output notes\n- output conversational text\n\n---\n\n## Quality Target\n\nThe resulting Work Package should be:\n\n- implementation-ready\n- technically consistent\n- repository aligned\n- testable\n- unambiguous\n- maintainable\n- suitable for another review with a target score of at least 95/100\n\n---\n\n## Output Contract (STRICT)\n\nPerform all reasoning internally.\n\nNever output:\n\n- reasoning\n- chain of thought\n- repository summaries\n- explanations\n- progress updates\n- acknowledgements\n- introductions\n- commentary\n- notes\n- changelogs\n\nNever output phrases such as:\n\n- \"I analyzed...\"\n- \"Based on my analysis...\"\n- \"I improved...\"\n- \"Here is...\"\n- \"Below is...\"\n- \"I will...\"\n- \"The repository contains...\"\n\nOnly output the requested Work Package.\n\nIf the user specifies an exact document structure, follow it exactly.\n\nIf the user specifies the first line of the response, it MUST be the first characters of the response.\n\nNo whitespace may appear before the first line.\n\nBefore producing the response, internally verify that:\n\n- all applicable review findings have been addressed\n- the document remains internally consistent\n- no valid information has been removed\n- the output satisfies the requested structure exactly"
+            },
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "={{ $json.workPackage }}"
+            },
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "={{ $json.review }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1568,
+        0
+      ],
+      "id": "97a71a1a-6532-48bb-90c0-370259d4742a",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "63ec3e64-914a-4573-a9b9-4d76ae5ab31f",
+              "name": "promt",
+              "value": "You are a Senior IT Solution Architect and Technical Writer.\n\nYour task is to improve an existing Work Package based on a review report.\n\n## Input\n\nYou will receive:\n\n1. The current Work Package in Markdown.\n2. A structured Review Report containing findings, score, weaknesses and recommendations.\n\n## Goal\n\nImprove the Work Package by applying ALL valid review recommendations.\n\nThe final Work Package must be implementation-ready and should achieve a review score of at least 95/100.\n\n## Rules\n\n- Keep the existing document structure whenever possible.\n- Preserve all existing information unless it is incorrect or incomplete.\n- Fix every issue mentioned in the review.\n- Add missing technical details.\n- Remove ambiguities.\n- Improve clarity and precision.\n- Add implementation details where required.\n- Improve acceptance criteria if necessary.\n- Improve testing requirements if necessary.\n- Improve dependencies, assumptions and risks if necessary.\n- Ensure consistency throughout the document.\n- Do NOT invent requirements that are unrelated to the original Work Package.\n- Do NOT remove valid information.\n- Do NOT explain what you changed.\n- Do NOT output a changelog.\n- Do NOT output Markdown code fences.\n\n## Quality Requirements\n\nThe resulting Work Package must be:\n\n- Complete\n- Precise\n- Technically consistent\n- Testable\n- Unambiguous\n- Ready for implementation by a software engineer\n- Suitable for another review with a target score >=95\n\n# Output Rules\n\nPerform the repository analysis internally.\n\nDo NOT explain your reasoning.\n\nDo NOT describe your analysis process.\n\nDo NOT summarize your analysis.\n\nDo NOT announce what you are going to do.\n\nDo NOT include sentences like:\n\n- \"After analyzing the repository...\"\n- \"Now I understand the codebase...\"\n- \"Based on my analysis...\"\n- \"I will now...\"\n- \"Let me...\"\n- \"The repository contains...\"\n\nDo NOT output any thoughts, notes or commentary.\n\nDo NOT wrap the response inside Markdown code fences.\n\nReturn ONLY the final Work Package.\n\nThe response MUST begin immediately with:\n\n# Work Package",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "f9bf1c80-2c8f-451d-bf9a-01757f4ab722",
+      "name": "refine promt builder"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $('When Executed by Another Workflow').item.json['Repository Owner'] }}\n/{{ $('When Executed by Another Workflow').item.json['Repository Name'] }}/issues/{{ $('When Executed by Another Workflow').item.json['Issue Number'] }}/comments",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GITHUB_TOKEN"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        928,
+        160
+      ],
+      "id": "c5e14393-ee93-4fae-a0f7-798db6021393",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const workPackage = $('Basic LLM Chain').first().json.text;\n\nconst timestamp = new Intl.DateTimeFormat(\"sv-SE\", {\n  timeZone: \"Europe/Berlin\",\n  year: \"numeric\",\n  month: \"2-digit\",\n  day: \"2-digit\",\n  hour: \"2-digit\",\n  minute: \"2-digit\",\n  second: \"2-digit\",\n  hour12: false,\n}).format(new Date()).replace(\" \", \" \");\n\nreturn [{\n  json: {\n    output: `> Generated: ${timestamp} Europe/Berlin\n\n${workPackage}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2736,
+        -16
+      ],
+      "id": "f67e04d5-4344-4668-b953-83cc2a25d940",
+      "name": "get timestemp"
+    },
+    {
+      "parameters": {
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow').item.json['Repository Owner'] }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow').item.json['Repository Name'] }}",
+          "mode": "name"
+        },
+        "issueNumber": "={{ $('When Executed by Another Workflow').item.json['Issue Number'] }}",
+        "editFields": {
+          "body": "={{ $json.output }}"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2928,
+        -16
+      ],
+      "id": "0da6ea89-08e1-476a-8ceb-14346e2ea99b",
+      "name": "Edit issue",
+      "webhookId": "f147a3f9-f38e-464b-90ed-532cb801fe55",
+      "credentials": {
+        "githubApi": {
+          "id": "FrfLZkxyTwKpU6UT",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow').item.json['Repository Owner'] }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow').item.json['Repository Name'] }}",
+          "mode": "name"
+        },
+        "issueNumber": "={{ $('When Executed by Another Workflow').item.json['Issue Number'] }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        0
+      ],
+      "id": "31127c3f-b07f-4677-ac73-d325b34a3448",
+      "name": "Get issue",
+      "webhookId": "f147a3f9-f38e-464b-90ed-532cb801fe55",
+      "credentials": {
+        "githubApi": {
+          "id": "AmrD6r1j4vl4Wjnj",
+          "name": "guthub-classic-token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "6J0l7Kx3ns5ys7YB",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6J0l7Kx3ns5ys7YB",
+          "cachedResultName": "GitHub.SetProjectFiel"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ $json['Repository Owner'] }}",
+            "repo": "={{ $json['Repository Name'] }}",
+            "issue": "={{ $json['Issue Number'] }}",
+            "field": "Status",
+            "value": "In progress"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "owner",
+              "displayName": "owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "repo",
+              "displayName": "repo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "issue",
+              "displayName": "issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "field",
+              "displayName": "field",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        0
+      ],
+      "id": "53071588-00d1-4bc8-845a-8bf495e503c5",
+      "name": "set Status 'In progress'"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Repository Owner"
+            },
+            {
+              "name": "Repository Name"
+            },
+            {
+              "name": "Issue Number",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        0
+      ],
+      "id": "aeb6b3d2-d6d4-4b54-b3a7-61c27db0a8f9",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const labels = $(\"Get issue\")\n  .first()\n  .json\n  .labels\n  .map(label => label.name);\n\n// \"apply review\" und \"automation:running\" entfernen\nconst filtered = labels.filter(label =>\n  ![\"apply review\", \"automation:running\"].includes(label)\n);\n\n// \"create review\" hinzufügen, falls noch nicht vorhanden\nif (!filtered.includes(\"create review\")) {\n  filtered.push(\"create review\");\n}\n\nreturn [{\n  json: {\n    labels: filtered\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        -16
+      ],
+      "id": "7b703202-ee50-4ba1-ab58-913cc232b606",
+      "name": "set 'Create Review'"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{$('Get issue').item.json.url}}/labels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  labels: $json.labels\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2352,
+        -16
+      ],
+      "id": "71006950-0a2b-4b17-b3b7-dc347a0c18e5",
+      "name": "get comments1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "githubApi": {
+          "id": "FrfLZkxyTwKpU6UT",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "6J0l7Kx3ns5ys7YB",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6J0l7Kx3ns5ys7YB",
+          "cachedResultName": "GitHub.SetProjectFiel"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ $('When Executed by Another Workflow').item.json['Repository Owner'] }}",
+            "repo": "={{ $('When Executed by Another Workflow').item.json['Repository Name'] }}",
+            "issue": "={{ $('When Executed by Another Workflow').item.json['Issue Number'] }}",
+            "field": "Status",
+            "value": "Ready"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "owner",
+              "displayName": "owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "repo",
+              "displayName": "repo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "issue",
+              "displayName": "issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "field",
+              "displayName": "field",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2544,
+        -16
+      ],
+      "id": "8419d52d-9f51-47c3-a30e-59acc942bafb",
+      "name": "set Status 'In progress'1"
+    },
+    {
+      "parameters": {
+        "providerID": "opencode",
+        "modelID": "mimo-v2.5-free",
+        "sessionMode": "temporary"
+      },
+      "type": "n8n-nodes-jada.jadaChatModel",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        224
+      ],
+      "id": "4505c569-c8a0-400f-bfa5-75f716c46159",
+      "name": "Jada Chat Model2",
+      "credentials": {
+        "jadaOpenCodeApi": {
+          "id": "UwrYnatUHOMTExEH",
+          "name": "Jada OpenCode account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8276433180",
+        "text": "Refine Agent - error - loop",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        16
+      ],
+      "id": "2aa6ef06-87e3-4bcd-b8df-609b44f7a79b",
+      "name": "Send a text message1",
+      "webhookId": "6e58fad6-8d4f-45a8-a131-b3bf77db8765",
+      "credentials": {
+        "telegramApi": {
+          "id": "6lW6p4tgAnGfjJ9e",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "get issue body": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get comment body": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "set 'Create Review'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "refine promt builder": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "get comment body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get timestemp": {
+      "main": [
+        [
+          {
+            "node": "Edit issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit issue": {
+      "main": [
+        []
+      ]
+    },
+    "Get issue": {
+      "main": [
+        [
+          {
+            "node": "get issue body",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "refine promt builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set Status 'In progress'": {
+      "main": [
+        [
+          {
+            "node": "Get issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "set Status 'In progress'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set 'Create Review'": {
+      "main": [
+        [
+          {
+            "node": "get comments1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get comments1": {
+      "main": [
+        [
+          {
+            "node": "set Status 'In progress'1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set Status 'In progress'1": {
+      "main": [
+        [
+          {
+            "node": "get timestemp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jada Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "K66c3w5hhJ37fAqM",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "99af0b6e-e15a-48c0-a21c-1be071a4dab7",
+  "activeVersionId": "99af0b6e-e15a-48c0-a21c-1be071a4dab7",
+  "versionCounter": 219,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-21T10:50:42.772Z",
+      "createdAt": "2026-07-21T10:50:42.772Z",
+      "role": "workflow:owner",
+      "workflowId": "HBfvezw1y956IKDm",
+      "projectId": "A0Yicp6IvSFdAZpS",
+      "project": {
+        "updatedAt": "2026-07-17T21:53:52.270Z",
+        "createdAt": "2026-07-17T21:53:00.695Z",
+        "id": "A0Yicp6IvSFdAZpS",
+        "name": "Micha Oro <micha.oro@me.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "fdcdf568-a0bd-4568-a032-8cb991d82094"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 99af0b6e",
+    "description": ""
+  }
+}

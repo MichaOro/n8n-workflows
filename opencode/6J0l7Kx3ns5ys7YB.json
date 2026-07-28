@@ -1,0 +1,217 @@
+{
+  "updatedAt": "2026-07-24T11:37:53.937Z",
+  "createdAt": "2026-07-19T16:22:11.965Z",
+  "id": "6J0l7Kx3ns5ys7YB",
+  "name": "GitHub.SetProjectFiel",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "owner"
+            },
+            {
+              "name": "repo"
+            },
+            {
+              "name": "issue",
+              "type": "number"
+            },
+            {
+              "name": "field"
+            },
+            {
+              "name": "value"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2c87ef30-f478-4df1-a6aa-a0bcc619d400",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "endpoint": "https://api.github.com/graphql",
+        "query": "query GetIssueProjectItem($owner: String!, $repo: String!, $issue: Int!) {\n  repository(owner: $owner, name: $repo) {\n    issue(number: $issue) {\n      projectItems(first: 20) {\n        nodes {\n          id\n          project {\n            id\n            title\n          }\n        }\n      }\n    }\n  }\n}",
+        "variables": "={{\n{\n  owner: $json.owner,\n  repo: $json.repo,\n  issue: $json.issue\n}\n}}",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GITHUB_TOKEN"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.graphql",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "613640dd-4707-451f-85c5-2e30053b9751",
+      "name": "get project item"
+    },
+    {
+      "parameters": {
+        "endpoint": "https://api.github.com/graphql",
+        "query": "query GetProjectFields($projectId: ID!) {\n  node(id: $projectId) {\n    ... on ProjectV2 {\n      fields(first: 50) {\n        nodes {\n          ... on ProjectV2FieldCommon {\n            id\n            name\n          }\n\n          ... on ProjectV2SingleSelectField {\n            options {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n}",
+        "variables": "={{\n{\n  projectId: $json.data.repository.issue.projectItems.nodes[0].project.id\n}\n}}",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GITHUB_TOKEN"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.graphql",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "cb5d3f11-5c1b-4215-936c-0d77b10a63e4",
+      "name": "get project fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GITHUB_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  query: \"mutation UpdateProjectField($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) { updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $fieldId, value: { singleSelectOptionId: $optionId } }) { projectV2Item { id } } }\",\n  operationName: \"UpdateProjectField\",\n  variables: {\n    projectId: $json.projectId,\n    itemId: $json.itemId,\n    fieldId: $json.fieldId,\n    optionId: $json.optionId\n  }\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "08368a52-69fa-42fa-bdd7-a130975798ed",
+      "name": "update project field"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ---------- Workflow Input ----------\nconst input = $('When Executed by Another Workflow')\n  .first()\n  .json;\n\n// ---------- Project Item ----------\nconst projectItem = $('get project item')\n  .first()\n  .json\n  .data\n  .repository\n  .issue\n  .projectItems\n  .nodes[0];\n\n// ---------- Project Fields ----------\nconst fields = $('get project fields')\n  .first()\n  .json\n  .data\n  .node\n  .fields\n  .nodes;\n\n// ---------- Feld suchen ----------\nconst projectField = fields.find(\n  f => f.name.toLowerCase() === String(input.field).toLowerCase()\n);\n\nif (!projectField) {\n  throw new Error(`Project field '${input.field}' not found.`);\n}\n\nif (!projectField.options) {\n  throw new Error(\n    `Project field '${input.field}' is not a Single Select field.`\n  );\n}\n\n// ---------- Option suchen ----------\nconst option = projectField.options.find(\n  o => o.name.toLowerCase() === String(input.value).toLowerCase()\n);\n\nif (!option) {\n  throw new Error(\n    `Option '${input.value}' not found in field '${input.field}'.`\n  );\n}\n\n// ---------- Ergebnis ----------\nreturn [{\n  json: {\n    issue: input.issue,\n\n    projectId: projectItem.project.id,\n    itemId: projectItem.id,\n\n    fieldId: projectField.id,\n    optionId: option.id,\n\n    field: projectField.name,\n    value: option.name\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        0
+      ],
+      "id": "c60f86fe-ecdf-4943-84de-b9d613fe99e9",
+      "name": "resolve IDs"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "get project item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get project item": {
+      "main": [
+        [
+          {
+            "node": "get project fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get project fields": {
+      "main": [
+        [
+          {
+            "node": "resolve IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "resolve IDs": {
+      "main": [
+        [
+          {
+            "node": "update project field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "templateId": "rag-starter-template",
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "47cf311c-e03e-46a8-a70a-469e8e6e9955",
+  "activeVersionId": "47cf311c-e03e-46a8-a70a-469e8e6e9955",
+  "versionCounter": 149,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-19T16:22:11.965Z",
+      "createdAt": "2026-07-19T16:22:11.965Z",
+      "role": "workflow:owner",
+      "workflowId": "6J0l7Kx3ns5ys7YB",
+      "projectId": "A0Yicp6IvSFdAZpS",
+      "project": {
+        "updatedAt": "2026-07-17T21:53:52.270Z",
+        "createdAt": "2026-07-17T21:53:00.695Z",
+        "id": "A0Yicp6IvSFdAZpS",
+        "name": "Micha Oro <micha.oro@me.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "fdcdf568-a0bd-4568-a032-8cb991d82094"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 47cf311c",
+    "description": ""
+  }
+}
