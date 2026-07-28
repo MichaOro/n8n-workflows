@@ -81,7 +81,8 @@
         "filters": {
           "conditions": [
             {
-              "keyValue": "={{ $execution.id }}"
+              "keyName": "executionId",
+              "keyValue": "={{ Number($execution.id) }}"
             }
           ]
         },
@@ -145,20 +146,24 @@
           "cachedResultName": "5na0HOZmYhDvhM4p",
           "cachedResultUrl": "/projects/dEa23WTDtZb5kwKd/datatables/SNcSF0IVx1ixgOW0"
         },
+        "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyValue": "=={{ String($execution.id) }}"
+              "keyName": "executionId",
+              "keyValue": "={{ $('isert start row').item.json.executionId }}"
+            },
+            {
+              "keyName": "run",
+              "keyValue": "={{ $('isert start row').item.json.run }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "run": "={{ $('Code in JavaScript2').item.json.run }}",
             "status": "success",
-            "outputContent": "={{ (() => {\n  const text = ($json.output?.report?.content ?? '').trim();\n  return text.length > 250 ? text.slice(0, 247) + '...' : text;\n})() }}",
-            "executionId": "={{ $('Insert Error Row').item.json.executionId }}"
+            "outputContent": "={{ (() => {\n  const text = ($json.output?.report?.content ?? '').trim();\n  return text.length > 250 ? text.slice(0, 247) + '...' : text;\n})() }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -170,7 +175,7 @@
               "display": true,
               "type": "number",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
               "id": "run",
@@ -180,7 +185,7 @@
               "display": true,
               "type": "number",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
               "id": "status",
@@ -227,20 +232,24 @@
           "cachedResultName": "5na0HOZmYhDvhM4p",
           "cachedResultUrl": "/projects/dEa23WTDtZb5kwKd/datatables/SNcSF0IVx1ixgOW0"
         },
+        "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyValue": "=={{ String($execution.id) }}"
+              "keyName": "executionId",
+              "keyValue": "={{ $('isert start row').item.json.executionId }}"
+            },
+            {
+              "keyName": "run",
+              "keyValue": "={{ $('isert start row').item.json.run }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "run": "={{ $('Code in JavaScript2').item.json.run }}",
             "status": "error",
-            "outputContent": "={{ (() => {\n  const text = ($json.text ?? '').trim();\n  return text.length > 250 ? text.slice(0, 247) + '...' : text;\n})() }}",
-            "executionId": "={{ $('Insert Success Row').item.json.id }}"
+            "outputContent": "={{ (() => {\n  const text = ($json.text ?? '').trim();\n  return text.length > 250 ? text.slice(0, 247) + '...' : text;\n})() }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -252,7 +261,7 @@
               "display": true,
               "type": "number",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
               "id": "run",
@@ -262,7 +271,7 @@
               "display": true,
               "type": "number",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
               "id": "status",
@@ -349,34 +358,6 @@
     },
     {
       "parameters": {
-        "mode": "raw",
-        "jsonOutput": "{\n    \"review\": \"```json\\n{\\n  \\\"metadata\\\": {\\n    \\\"skill\\\": \\\"work-package-review\\\",\\n    \\\"version\\\": \\\"2.0\\\",\\n    \\\"schemaVersion\\\": \\\"2.1\\\",\\n    \\\"reviewId\\\": \\\"WP-6-20260725T154500Z\\\",\\n    \\\"reviewType\\\": \\\"Work Package Review\\\",\\n    \\\"reviewDate\\\": \\\"2026-07-25T15:45:00Z\\\",\\n    \\\"repository\\\": \\\"C:\\\\\\\\Users\\\\\\\\micha\\\\\\\\repos\\\\\\\\n8n-workflows\\\",\\n    \\\"workPackage\\\": \\\"WP-6: Cross-Platform sync-from-git Workflow\\\"\\n  },\\n  \\\"summary\\\": {\\n    \\\"decision\\\": \\\"CONDITIONAL PASS\\\",\\n    \\\"score\\\": 78,\\n    \\\"scoreCeiling\\\": 89,\\n    \\\"confidence\\\": \\\"Medium\\\",\\n    \\\"readiness\\\": \\\"Requires Changes\\\",\\n    \\\"implementationReady\\\": false,\\n    \\\"critical\\\": 0,\\n    \\\"high\\\": 0,\\n    \\\"medium\\\": 2,\\n    \\\"low\\\": 1,\\n    \\\"totalFindings\\\": 3,\\n    \\\"blockingFindings\\\": 0\\n  },\\n  \\\"findings\\\": [\\n    {\\n      \\\"id\\\": \\\"F-001\\\",\\n      \\\"severity\\\": \\\"Medium\\\",\\n      \\\"status\\\": \\\"open\\\",\\n      \\\"title\\\": \\\"Data contract mismatch between Parse and Import nodes not addressed\\\",\\n      \\\"dimension\\\": \\\"Data Contract Completeness\\\",\\n      \\\"description\\\": \\\"The Work Package states the merged Code node must 'Output the same list format the downstream Import/Update Workflows via API node expects' without acknowledging that the current Parse node output format does not match what the Import node consumes. The Parse node at sync-from-git.json:31 returns a single bundled item with `{ json: { count, workflows: [{ relativePath, name, workflow }] } }`. The Import node at sync-from-git.json:44 iterates `$input.all()` and reads `item.json.workflow` (singular) from each item — but `item.json.workflow` is `undefined` on a bundled item because `workflow` lives inside `workflows[]`. This means the current workflow silently skips every workflow file with 'no workflow object' and imports nothing. The phrase 'same list format' is ambiguous — it could mean the current (broken) format or the format the Import node expects. An implementer who reproduces the current bundled format will produce a workflow that continues to fail silently.\\\",\\n      \\\"evidence\\\": \\\"sync-from-git.json:31 — Parse node returns `return [{ json: { count: loaded.length, workflows: loaded } }]` (single bundled item). sync-from-git.json:44 — Import node code `const wf = item.json.workflow` accesses `.workflow` (singular) which would be `undefined` because the bundled item has `.workflows` (plural). git diff 62ea75a shows this data contract has existed since initial commit dea720a and was not corrected in the subsequent fix commit.\\\",\\n      \\\"impact\\\": \\\"If the implementer reproduces the current bundled output format, the Import node will skip every workflow file with 'no workflow object' — zero workflows will be imported or updated. The workflow will appear to complete successfully but will have accomplished nothing.\\\",\\n      \\\"recommendation\\\": \\\"Explicitly specify in the Work Package that the merged Code node must output one item per workflow file, where each item has `{ json: { relativePath, name, workflow } }`. The merged node should use `return loaded.map(l => ({ json: l }));` instead of bundling into a single item. This makes the output format match what `$input.all()` iteration in the Import node expects.\\\"\\n    },\\n    {\\n      \\\"id\\\": \\\"F-002\\\",\\n      \\\"severity\\\": \\\"Medium\\\",\\n      \\\"status\\\": \\\"open\\\",\\n      \\\"title\\\": \\\"Git pull error handling not specified\\\",\\n      \\\"dimension\\\": \\\"Error and Observability Completeness\\\",\\n      \\\"description\\\": \\\"The Work Package proposes using `child_process.execSync()` for the git pull step but does not specify error handling when git pull fails (network outage, merge conflict, authentication failure). The current implementation uses shell `2>&1` to capture stderr, effectively continuing past errors. `child_process.execSync()` throws an exception on non-zero exit code, which will crash the workflow unless wrapped in try-catch. The WP's test strategy says 'verify the workflow reports the git error without crashing' but provides no implementation specification for how to achieve this.\\\",\\n      \\\"evidence\\\": \\\"sync-from-git.json:17 — current executeCommand uses `git pull origin main 2>&1` which captures stderr without crashing. The WP Architecture Notes propose replacing this with `child_process.execSync()` but provide no error handling specification. `execSync` documentation (Node.js) confirms it throws an `Error` with `.stderr` and `.status` properties on non-zero exit.\\\",\\n      \\\"impact\\\": \\\"Without explicit specification, the implementer may let `execSync` exceptions propagate uncaught, causing the n8n workflow execution to fail abruptly whenever git pull encounters a transient network issue or merge conflict. This prevents the workflow from reporting partial success or logging the error.\\\",\\n      \\\"recommendation\\\": \\\"Specify that `execSync` must be wrapped in try-catch, with the git error message (`error.stderr?.toString()` or `error.message`) included in the output items so the workflow continues and reports the failure to downstream nodes. For example: capture git pull output in a try block, and on error emit an item with `{ error: errorMessage }` instead of crashing.\\\"\\n    },\\n    {\\n      \\\"id\\\": \\\"F-003\\\",\\n      \\\"severity\\\": \\\"Low\\\",\\n      \\\"status\\\": \\\"open\\\",\\n      \\\"title\\\": \\\"README update scope underspecified\\\",\\n      \\\"dimension\\\": \\\"Specification Completeness\\\",\\n      \\\"description\\\": \\\"The Work Package requires updating `opencode/README.md` to document the cross-platform change, but does not specify what content should be added or modified. The current README at opencode/README.md has no mention of `sync-from-git` at all, only documenting `review-loop`, `task-pack`, and `mini-pocket`. The WP states the sync-from-git workflow requires `$env.REPO_ROOT`, which should be documented alongside the other workflows.\\\",\\n      \\\"evidence\\\": \\\"opencode/README.md:1-169 — the entire file contains no section for `sync-from-git`. The `$env.REPO_ROOT` requirement is documented for `task-pack` (line 103) and mentioned in the Cross-Platform Notes (line 132) but not for sync-from-git.\\\",\\n      \\\"impact\\\": \\\"Minor. The implementer will add documentation but may produce inconsistent content without guidance. This does not affect workflow correctness.\\\",\\n      \\\"recommendation\\\": \\\"Add a section for `sync-from-git` in `opencode/README.md` following the same pattern as `review-loop` and `task-pack`, documenting: the workflow purpose, that it requires `$env.REPO_ROOT` set to the repo parent directory, that `git` must be in PATH, and that the n8n API key `$env.N8N_API_TOKEN` must be configured.\\\"\\n    }\\n  ],\\n  \\\"report\\\": {\\n    \\\"format\\\": \\\"markdown\\\",\\n    \\\"version\\\": \\\"2.0\\\",\\n    \\\"content\\\": \\\"## Work Package Review: WP-6 — Cross-Platform sync-from-git Workflow\\\\n\\\\n### Metadata\\\\n- **Reviewer**: work-package-review skill (automated)\\\\n- **Review ID**: WP-6-20260725T154500Z\\\\n- **Review Type**: Work Package Review\\\\n- **Subject**: WP-6: Cross-Platform `sync-from-git` Workflow\\\\n- **Repository**: C:\\\\\\\\Users\\\\\\\\micha\\\\\\\\repos\\\\\\\\n8n-workflows\\\\n- **Date**: 2026-07-25T15:45:00Z\\\\n- **Simulation Ceiling**: 89\\\\n- **Finding Count**: 2 Medium, 1 Low\\\\n\\\\n### Executive Summary\\\\n\\\\n**CONDITIONAL PASS** — The Work Package is fundamentally sound and can be implemented with minor clarifications. The core approach (Node.js Code node with `fs.readdirSync`, `child_process.execSync`, and `process.env.REPO_ROOT`) is feasible and follows established patterns from `review-loop.json` and `task-pack.json`. Two Medium findings require attention before the implementer reaches affected code: the data contract between the merged code node and the Import/Update node must be explicitly fixed (the current format is broken), and git pull error handling must be specified. Both have clear remediation. The Work Package correctly identifies the hard-coded paths, the Linux-specific `find` command, and the target approach.\\\\n\\\\n### Decision\\\\n- **Readiness Score**: 78\\\\n- **Simulation Ceiling**: 89\\\\n- **Decision**: CONDITIONAL PASS\\\\n- **Confidence**: Medium\\\\n\\\\n### Review Context\\\\n\\\\nThis review examined the `sync-from-git.json` workflow definition (94 lines, 4 nodes) against the repository's existing conventions established in `review-loop.json`, `task-pack.json`, and `opencode/README.md`. The Work Package proposes replacing a Linux-only `executeCommand` node (`find` + `git pull`) and a downstream Code node (Parse Workflow JSONs) with a single cross-platform Code node using Node.js built-ins. The \\\\\\\"Import/Update Workflows via API\\\\\\\" node is out of scope and was analyzed only for its input contract. The review included simulation of the merged Code node implementation, gap analysis across all four layers, and verification of all Work Package claims against repository evidence.\\\\n\\\\n### Key Findings\\\\n1. **Medium**: Data contract mismatch between Parse and Import nodes — the current workflow's Parse node outputs bundled items (`{ count, workflows: [...] }`) but the Import node reads `item.json.workflow` (singular), causing silent failure. The Work Package must clarify that the merged node must output one item per workflow.\\\\n2. **Medium**: Git pull error handling unspecified — `child_process.execSync()` will throw on non-zero exit, crashing the workflow. The handling strategy must be specified.\\\\n3. **Low**: README update scope is underspecified — no guidance on what content to add.\\\\n\\\\n### Detailed Findings\\\\n\\\\n#### F-001 [Medium] Data contract mismatch between Parse and Import nodes not addressed\\\\n- **Dimension**: Data Contract Completeness\\\\n- **Evidence**: sync-from-git.json:31 — Parse node returns `return [{ json: { count: loaded.length, workflows: loaded } }]` (single bundled item). sync-from-git.json:44 — Import node code `const wf = item.json.workflow` accesses `.workflow` (singular) which is `undefined` on a bundled item with `.workflows` (plural). git diff 62ea75a confirms this mismatch has existed since the initial commit dea720a and was not corrected in the subsequent import-field fix.\\\\n- **Engineering Principle**: Explicit over Implicit — data contracts between connected nodes must be explicitly defined and consistent. The phrase \\\\\\\"same list format\\\\\\\" can be read two ways, and one reading reproduces a broken contract.\\\\n- **Problem**: The current Parse node outputs a single item with `{ count, workflows: [items] }`. The Import node iterates `$input.all()` and reads `item.json.workflow`. Since `workflow` is nested inside `workflows[]`, `item.json.workflow` is `undefined` for the single bundled item. Every workflow file is skipped with \\\\\\\"no workflow object.\\\\\\\"\\\\n- **Impact**: An implementer who reproduces the current bundled output format will produce a workflow that silently imports zero workflows, defeating the entire purpose of the sync.\\\\n- **Recommendation**: Specify that the merged Code node must output one item per workflow file using `return loaded.map(l => ({ json: l }));` so each item has `{ json: { relativePath, name, workflow } }`, matching the Import node's `$input.all()` iteration pattern.\\\\n\\\\n#### F-002 [Medium] Git pull error handling not specified\\\\n- **Dimension**: Error and Observability Completeness\\\\n- **Evidence**: sync-from-git.json:17 — current `executeCommand` uses `git pull origin main 2>&1` capturing stderr without crashing. The WP proposes `child_process.execSync()` without error handling. Node.js `child_process.execSync()` throws on non-zero exit code per its API contract.\\\\n- **Engineering Principle**: Explicit over Implicit — error paths must be specified, not left to the implementer to infer.\\\\n- **Problem**: `execSync` throws an `Error` with `.stderr` and `.status` on non-zero exit. Without try-catch, a network failure during git pull will crash the workflow with an unhandled exception, reaching none of the file-processing logic.\\\\n- **Impact**: The workflow will fail abruptly on any git pull error (network outage, merge conflict, auth failure) instead of reporting the error gracefully.\\\\n- **Recommendation**: Specify that `execSync` must be wrapped in try-catch. On success, proceed to file discovery. On error, emit an item with the error message from `error.stderr?.toString()` or `error.message` so downstream nodes can report the failure.\\\\n\\\\n#### F-003 [Low] README update scope underspecified\\\\n- **Dimension**: Specification Completeness\\\\n- **Evidence**: opencode/README.md:1-169 — no mention of `sync-from-git` exists in the current documentation.\\\\n- **Engineering Principle**: Explicit over Implicit — documentation requirements should specify what content is needed.\\\\n- **Problem**: The WP says \\\\\\\"update the README\\\\\\\" but does not specify what sections to add or what details to include.\\\\n- **Impact**: Minor. The implementer will add documentation but may produce inconsistent content without guidance.\\\\n- **Recommendation**: Add a `sync-from-git` section following the same format as existing workflow sections, documenting its purpose, the `$env.REPO_ROOT` requirement, `git` PATH requirement, and `$env.N8N_API_TOKEN` configuration.\\\\n\\\\n### Dimension Summary\\\\n| Dimension | Finding Count | Status |\\\\n|---|---|---|\\\\n| Specification Completeness | 1 Low | ISSUES |\\\\n| Data Contract Completeness | 1 Medium | ISSUES |\\\\n| Integration Surface Completeness | 0 | OK |\\\\n| Error and Observability Completeness | 1 Medium | ISSUES |\\\\n| Architectural Fit | 0 | OK |\\\\n| Reuse Efficiency | 0 | OK |\\\\n\\\\n### Decision Rationale\\\\n\\\\nThe readiness score is 78, constrained by a simulation ceiling of 89. The ceiling is 89 (not 100) because two Medium gaps were identified during simulation: the data contract ambiguity (F-001) and the missing error handling specification (F-002). Both gaps have clear remediation guidance — the implementer can proceed with well-understood portions while these are clarified.\\\\n\\\\nThe decision is CONDITIONAL PASS because:\\\\n- No Critical or High findings exist.\\\\n- The simulation ceiling is 89 (≥ 70, supporting conditional pass).\\\\n- The score 78 falls within the 70-89 conditional pass range.\\\\n- Both Medium findings have documented remediation that the implementer can apply.\\\\n- Confidence is Medium: repository analysis was thorough within the impact zone (sync-from-git workflow and its upstream/downstream nodes), and the proposed approach follows established conventions. Full cross-platform verification would require execution testing on both machines, which was not performed.\\\\n\\\\nTo raise confidence to High: verify the data contract between the merged node and Import node is correct by tracing the output format through `$input.all()` iteration, and confirm the `execSync` error handling strategy on both platforms.\\\\n\\\\n### Implementation Guidance\\\\n\\\\n1. **Can proceed immediately**: The merged Code node structure, recursive file walk with `fs.readdirSync`, path derivation using `process.env.REPO_ROOT` + `path.join()`, and JSON parsing logic are all well-specified and can be implemented.\\\\n2. **Requires clarification**:\\\\n   - **Data contract**: Decide whether the merged node outputs one item per workflow (recommended — fixes the existing bug) or maintains the bundled format (would require changing the Import node). The former is the minimal correct fix.\\\\n   - **Error handling**: Decide whether git pull errors should crash the workflow or be captured and reported (recommended — wrap `execSync` in try-catch and emit error items).\\\\n3. **Recommended order**:\\\\n   - First, implement the merged Code node with one-item-per-workflow output and try-catch around git pull.\\\\n   - Second, remove the old \\\\\\\"Git Pull + List Files\\\\\\\" and \\\\\\\"Parse Workflow JSONs\\\\\\\" nodes from the workflow.\\\\n   - Third, update `opencode/README.md` with the new workflow section.\\\\n   - Fourth, test on one platform (Linux or Windows), then verify on the other.\\\\n\\\\n### Appendix: Repository Analysis Notes\\\\n\\\\n- **Topography**: n8n workflow JSON definitions. monorepo-like structure with `opencode/` for OpenCode-specific workflows and `workflows/` for general workflows.\\\\n- **Conventions verified**: `$env.REPO_ROOT` is established in `review-loop.json:18` and `task-pack.json:39`. Workflows tagged `synced` (verified: review-loop.json line 313, task-pack.json line 278, mini-pocket.json line 78). Code nodes use `require('fs')` and `require('path')` (sync-from-git.json:31).\\\\n- **Data contract bug**: The bundled output format in Parse node (sync-from-git.json:31) has existed since initial add (commit dea720a) and was not corrected in the subsequent fix (commit 62ea75a). The git diff of 62ea75a confirms only the Import node JS code and structural formatting changed — the Parse node output format was never touched.\\\"\\n  }\\n}\\n```\"\n  }",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        32,
-        944
-      ],
-      "id": "fc1161b7-6386-4a2b-a6a9-105ff4738e4b",
-      "name": "Edit Fields1"
-    },
-    {
-      "parameters": {
-        "jsCode": "let review = $json.review ?? \"\";\n\n// Markdown-Codefences entfernen\nreview = review.replace(/^```json\\s*/i, \"\");\nreview = review.replace(/^```\\s*/i, \"\");\nreview = review.replace(/\\s*```$/i, \"\");\n\nreturn [{\n  json: {\n    review\n  }\n}];"
-      },
-      "id": "8934a59b-75cc-4e18-a1b8-bc6f92da81f9",
-      "name": "Collapse To Single Item1",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        240,
-        944
-      ]
-    },
-    {
-      "parameters": {
         "promptType": "define",
         "text": "=Extract all information from the following engineering review.\n\n{{ $json.text }}",
         "hasOutputParser": true,
@@ -403,51 +384,6 @@
     },
     {
       "parameters": {
-        "model": "openai/gpt-oss-20b:free",
-        "options": {
-          "timeout": 1200000
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        464,
-        1104
-      ],
-      "id": "e348ebb6-ac5e-4fc6-97c1-8fa0583781bf",
-      "name": "OpenRouter Chat Model",
-      "credentials": {
-        "openRouterApi": {
-          "id": "RDD7iqLMedxhNPVg",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": "openai/gpt-oss-20b:free",
-        "options": {
-          "temperature": 0,
-          "timeout": 1200000
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        656,
-        1168
-      ],
-      "id": "e02c2305-a515-46fc-8d45-9539dc574cb5",
-      "name": "OpenRouter Chat Model1",
-      "credentials": {
-        "openRouterApi": {
-          "id": "RDD7iqLMedxhNPVg",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "providerID": "opencode",
         "modelID": "deepseek-v4-flash-free",
         "sessionMode": "temporary",
@@ -456,8 +392,8 @@
       "type": "CUSTOM.jadaChatModel",
       "typeVersion": 1,
       "position": [
-        -208,
-        960
+        256,
+        1296
       ],
       "id": "b68d5657-d62d-48fc-9591-3e70faa9557a",
       "name": "Jada Chat Model",
@@ -481,10 +417,21 @@
           "mappingMode": "defineBelow",
           "value": {
             "run": "={{ $('Code in JavaScript2').item.json.run }}",
-            "status": "in Progress"
+            "status": "in Progress",
+            "executionId": "={{ Number($execution.id) }}"
           },
           "matchingColumns": [],
           "schema": [
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
             {
               "id": "run",
               "displayName": "run",
@@ -522,13 +469,86 @@
         "options": {}
       },
       "id": "88044fa1-256c-4b3b-995f-efa9d73c0170",
-      "name": "Insert Success Row1",
+      "name": "isert start row",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
         -400,
         720
       ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "uqfe6HMXP9MGlItR",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "epicID",
+              "displayName": "epicID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "workPackageID",
+              "displayName": "workPackageID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "workPackageTitle",
+              "displayName": "workPackageTitle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "workPackageDescription",
+              "displayName": "workPackageDescription",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        352
+      ],
+      "id": "6ba3ebc2-e482-47a3-910e-c99b201f7677",
+      "name": "Call OpenCode Mini POC #2"
     }
   ],
   "connections": {
@@ -598,7 +618,7 @@
         ],
         [
           {
-            "node": "Insert Success Row1",
+            "node": "isert start row",
             "type": "main",
             "index": 0
           }
@@ -658,28 +678,6 @@
       "main": [
         [
           {
-            "node": "Insert Error Row",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields1": {
-      "main": [
-        [
-          {
-            "node": "Collapse To Single Item1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Collapse To Single Item1": {
-      "main": [
-        [
-          {
             "node": "Basic LLM Chain",
             "type": "main",
             "index": 0
@@ -705,9 +703,19 @@
         ]
       ]
     },
-    "OpenRouter Chat Model": {
+    "Jada Chat Model": {
       "ai_languageModel": [
         [
+          {
+            "node": "Basic LLM Chain5",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
           {
             "node": "Basic LLM Chain",
             "type": "ai_languageModel",
@@ -716,29 +724,7 @@
         ]
       ]
     },
-    "OpenRouter Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Structured Output Parser",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Jada Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Basic LLM Chain5",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Insert Success Row1": {
+    "isert start row": {
       "main": [
         [
           {
@@ -752,7 +738,6 @@
   },
   "pinData": {},
   "meta": {
-    "templateCredsSetupCompleted": true,
     "instanceId": "73dc20adedc83b019bbd76a832bc74727dc0d1bd8582497aee04916caf045fdb"
   }
 }
